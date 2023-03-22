@@ -1,10 +1,10 @@
-#define MOISTURE_SENSOR_PIN 18
-#define FLOW_METER_PIN      15
-#define WATER_PUMP_PIN      12
+#define MOISTURE_SENSOR_PIN 14
+#define FLOW_METER_PIN      25
+#define WATER_PUMP_PIN      35
 
-float calibrationFactor = 4.5;
+float calibration_factor = 4.5;
 
-int total_milli_liters = 0;
+int total_milli_litres = 0;
 volatile byte pulse_count;
 
 void IRAM_ATTR pulseCounter() {
@@ -12,25 +12,42 @@ void IRAM_ATTR pulseCounter() {
 }
 
 int interval = 1000;
-unsigned long lastTime = 0;
+unsigned long last_time = 0;
 
 
 void setup() {
   Serial.begin(115200);
 
-  pinMode(MOISTURE_SENSOR_PIN, INPUT_PULLUP);
+  pinMode(FLOW_METER_PIN, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(FLOW_METER_PIN), pulseCounter, FALLING);
 }
 
 void loop() {
-  if ((millis() - lastTime) > interval) {
-    flowRate = ((1000.0 / (millis() - lastTime)) * pulse_count) / calibrationFactor;
-    lastTime = millis();
+  if ((millis() - last_time) > interval) {
+    /*
+    * moisture_sensor
+    */
+    int moisture_analog = analogRead(MOISTURE_SENSOR_PIN);
+    Serial.println(moisture_analog);
+    int moisture_percentage = (100 - ((moisture_analog / 4095.00) * 100));
+    // int moisture_percentage = map(moisture_analog * 3.3 / 4095, 1.2, 2.5, 0, 100);
 
-    flowMilliLitres = (flowRate / 60) * 1000;
-    totalMilliLitres += flowMilliLitres;
+    Serial.print("Moisture = ");
+    Serial.print(moisture_percentage);
+    Serial.println("%");
 
-    Serial.print("Totaal Litres: ");
-    Serial.println(totalMilliLitres / 1000);
+
+    /*
+    * flow meter
+    */
+    // int flow_rate = ((1000.0 / (millis() - last_time)) * pulse_count) / calibration_factor;
+
+    // int flow_milli_litres = (flow_rate / 60) * 1000;
+    // total_milli_litres += flow_milli_litres;
+
+    // Serial.print("Total Litres: ");
+    // Serial.println(total_milli_litres / 1000);
+
+    last_time = millis();
   }
 }

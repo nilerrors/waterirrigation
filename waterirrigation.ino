@@ -5,7 +5,7 @@
 struct FlowMeter {
   const uint8_t PIN;
   uint32_t pulses_count;
-  uint8_t total_milli_litres;
+  float total_milli_litres;
   bool running;
   unsigned long last_running;
 };
@@ -24,6 +24,7 @@ unsigned long last_time = 0;
 
 #define MOISTURE_NONE 2660
 #define MOISTURE_WET  930
+#define IRRIGATION_THRESHOLD 1000
 
 
 void setup() {
@@ -53,23 +54,28 @@ void loop() {
     * flow meter
     */
     if (flow_meter.running) {
-      uint8_t pulse_count = flow_meter.pulses_count;      
+      uint8_t pulse_count = flow_meter.pulses_count;
       float flow_rate = ((1000.0 / (millis() - flow_meter.last_running)) * pulse_count) / calibration_factor;
+      Serial.print("Flow Rate: ");
+      Serial.println(flow_rate);
       flow_meter.last_running = millis();
       flow_meter.running = false;
 
       float flow_milli_litres = (flow_rate / 60) * 1000;
+      Serial.print("Flow Milli Litres: ");
+      Serial.println(flow_milli_litres);
       flow_meter.total_milli_litres += flow_milli_litres;
 
       Serial.print("Total milli Litres: ");
       Serial.println(flow_meter.total_milli_litres);
-      
-      if (flow_meter.total_milli_litres >= 1000) {
+
+      if (flow_meter.total_milli_litres >= IRRIGATION_THRESHOLD) {
         flow_meter.total_milli_litres = 0;
         // stop pomp
+        Serial.println("Stop pomp");
       }
     }
-    
+
     last_time = millis();
   }
 }

@@ -1,17 +1,14 @@
-int sensorPin = 2;
-volatile long pulse;
-float volume;
+int pumpPin = 14;
+
 void setup() {
-  pinMode(sensorPin, INPUT);
+  pinMode(pumpPin, OUTPUT);
   Serial.begin(9600);
-  attachInterrupt(digitalPinToInterrupt(sensorPin), increase, RISING);
 }
 void loop() {
-  volume = 2.663 * pulse;
-  Serial.print(volume);
-  Serial.println(" mL");
-  delay(500);
-}
-void increase() {
-  pulse++;
+  Serial.println("Pump on");
+  digitalWrite(pumpPin, HIGH);
+  delay(3000);
+  Serial.println("Pump off");
+  digitalWrite(pumpPin, LOW);
+  delay(3000);
 }

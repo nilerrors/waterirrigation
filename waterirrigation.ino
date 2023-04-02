@@ -24,12 +24,14 @@ unsigned long last_time = 0;
 
 #define MOISTURE_NONE 2660
 #define MOISTURE_WET  930
-#define IRRIGATION_THRESHOLD 1000
+#define IRRIGATION_THRESHOLD_PERCENTAGE 50
+#define IRRIGATION_AMOUNT 1000
 
 
 void setup() {
   Serial.begin(115200);
 
+  pinMode(WATER_PUMP_PIN, OUTPUT);
   pinMode(FLOW_METER_PIN, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(flow_meter.PIN), pulseCounter, FALLING);
 }
@@ -39,15 +41,22 @@ void loop() {
     /*
     * moisture_sensor
     */
-    // int moisture_analog = analogRead(MOISTURE_SENSOR_PIN);
-    // Serial.println(moisture_analog);
-    // int moisture_percentage = map(moisture_analog, MOISTURE_NONE, MOISTURE_WET, 0, 100);
-    // if (moisture_percentage > 100) moisture_percentage = 100;
-    // if (moisture_percentage < 0) moisture_percentage = 0;
+    int moisture_analog = analogRead(MOISTURE_SENSOR_PIN);
+    Serial.println(moisture_analog);
+    int moisture_percentage = map(moisture_analog, MOISTURE_NONE, MOISTURE_WET, 0, 100);
+    if (moisture_percentage > 100) moisture_percentage = 100;
+    if (moisture_percentage < 0) moisture_percentage = 0;
 
-    // Serial.print("Moisture = ");
-    // Serial.print(moisture_percentage);
-    // Serial.println("%");
+    Serial.print("Moisture = ");
+    Serial.print(moisture_percentage);
+    Serial.println("%");
+
+
+    if (moisture_percentage < IRRIGATION_THRESHOLD_PERCENTAGE) {
+      // start pomp
+      Serial.println("Start pomp");
+      digitalWrite(WATER_PUMP_PIN, HIGH);
+    }
 
 
     /*
@@ -69,10 +78,11 @@ void loop() {
       Serial.print("Total milli Litres: ");
       Serial.println(flow_meter.total_milli_litres);
 
-      if (flow_meter.total_milli_litres >= IRRIGATION_THRESHOLD) {
+      if (flow_meter.total_milli_litres >= IRRIGATION_AMOUNT) {
         flow_meter.total_milli_litres = 0;
         // stop pomp
         Serial.println("Stop pomp");
+        digitalWrite(WATER_PUMP_PIN, LOW);
       }
     }
 
